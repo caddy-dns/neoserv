@@ -4,6 +4,7 @@ import (
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	libdnsneoserv "github.com/libdns/neoserv"
+	"go.uber.org/zap"
 )
 
 // Provider lets Caddy read and manipulate DNS records hosted by this DNS provider.
@@ -26,6 +27,7 @@ func (p *Provider) Provision(ctx caddy.Context) error {
 	replacer := caddy.NewReplacer()
 	p.Provider.Username = replacer.ReplaceAll(p.Provider.Username, "")
 	p.Provider.Password = replacer.ReplaceAll(p.Provider.Password, "")
+	ctx.Logger(p).Info("configured DNS provider with username", zap.String("username", p.Provider.Username))
 
 	return nil
 }
