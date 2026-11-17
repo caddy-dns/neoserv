@@ -27,6 +27,7 @@ func (p *Provider) Provision(ctx caddy.Context) error {
 	replacer := caddy.NewReplacer()
 	p.Provider.Username = replacer.ReplaceAll(p.Provider.Username, "")
 	p.Provider.Password = replacer.ReplaceAll(p.Provider.Password, "")
+	p.Provider.TOTPSecret = replacer.ReplaceAll(p.Provider.TOTPSecret, "")
 	ctx.Logger(p).Info("configured DNS provider with username", zap.String("username", p.Provider.Username))
 
 	return nil
@@ -37,6 +38,7 @@ func (p *Provider) Provision(ctx caddy.Context) error {
 //	neoserv {
 //	    username <username>
 //	    password <password>
+//	    totp_secret <totp_secret>
 //	}
 func (p *Provider) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 	for d.Next() {
@@ -65,6 +67,16 @@ func (p *Provider) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 				if d.NextArg() {
 					return d.ArgErr()
 				}
+			case "totp_secret":
+				if p.Provider.TOTPSecret != "" {
+					return d.Err("TOTP secret already set")
+				}
+				if d.NextArg() {
+					p.Provider.TOTPSecret = d.Val()
+				}
+				if d.NextArg() {
+					return d.ArgErr()
+				}
 			default:
 				return d.Errf("unrecognized subdirective '%s'", d.Val())
 			}
@@ -75,6 +87,9 @@ func (p *Provider) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 	}
 	if p.Provider.Password == "" {
 		return d.Err("missing password")
+	}
+	if p.Provider.TOTPSecret == "" {
+		return d.Err("missing totp_secret")
 	}
 	return nil
 }
